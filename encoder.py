@@ -14,6 +14,7 @@ def main():
   try:
     with open(filename, 'rb') as f_read:
       with open(filename_result, 'wb') as f_write:
+        f_write.write(header)
         encode(f_read, f_write)
 
   except IOError as ioe:
@@ -30,7 +31,7 @@ def add_path_bin(directory, no_path_name):
   return directory + '/' + bin_name if directory else bin_name
 
 def encode(f_read, f_write):
-  result = []
+  #result = []
 
   search_buffer = []
   search_buffer_max = 8
@@ -66,7 +67,7 @@ def encode(f_read, f_write):
     
     #result.append(triple)
 
-  print(result)
+  #print(result)
 
 
 def find_pattern(search_buffer, look_ahead_buffer):
