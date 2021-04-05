@@ -29,6 +29,8 @@ def main():
   except WrongHeader:
     sys.exit('Erro: Header do arquivo não condiz com o esperado.')
 
+  print("Finished!\n")
+
 #-----------------------------
 
 class WrongHeader(Exception):
@@ -42,7 +44,36 @@ def add_path_rmv_bin(directory, no_path_name):
   return directory + '/' + no_bin_name if directory else no_bin_name
 
 def decode(f_read, f_write):
-  pass
+
+  search_buffer = []
+  search_buffer_max = 8
+
+  triple = tuple(f_read.read(3))
+  
+  while(triple):
+
+    index = triple[0]
+    size = triple[1]
+
+    if index > 0 and size > 0:
+      index = len(search_buffer) - index
+
+      for i in range(size):
+        search_buffer.append(search_buffer[index + i])
+        f_write.write(search_buffer[index + i])
+      
+      if len(search_buffer) > search_buffer_max:
+        search_buffer = search_buffer[len(search_buffer) - search_buffer_max:]
+
+    if len(search_buffer) == search_buffer_max:
+      search_buffer.pop(0)
+
+    search_buffer.append(triple[2].to_bytes(1, byteorder= 'big'))
+    f_write.write(triple[2].to_bytes(1, byteorder= 'big'))
+
+    triple = tuple(f_read.read(3))
+
+    print(search_buffer)
 
 if __name__ == "__main__":
   main()

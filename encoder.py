@@ -20,6 +20,7 @@ def main():
   except IOError as ioe:
     sys.exit('Arquivo ou diretório "{}" não existente.'.format(ioe.filename))
 
+  print("Finished!\n")
 
 #--------------------------------------
 
