@@ -48,8 +48,12 @@ def decode(f_read, f_write):
   print('Decoding... (this may take a while)')
   start = time.time()
 
+  if len(sys.argv) > 1:
+    search_buffer_max = sys.argv[1]
+  else:
+    search_buffer_max = 8
+
   search_buffer = []
-  search_buffer_max = 8
 
   triple = tuple(f_read.read(3))
   
