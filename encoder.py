@@ -1,6 +1,9 @@
 import sys
 import re
 import time
+import numpy as np
+from matplotlib import pyplot as plt
+import bitstring as bs
 
 def main():
 
@@ -33,26 +36,26 @@ def add_path_bin(directory, no_path_name):
   return directory + '/' + bin_name if directory else bin_name
 
 def encode(f_read, f_write):
-  #result = []
+  hist = []
 
   print('Enconding... (this may take a while)')
   start = time.time()
 
   if len(sys.argv) > 1:
-    search_buffer_max = sys.argv[1]
+    search_buffer_max = min(int(sys.argv[1]),255)
   else:
-    search_buffer_max = 8
+    search_buffer_max = 16
 
   search_buffer = []
 
   if len(sys.argv) > 2:
-    look_ahead_buffer_max = sys.argv[2]
+    look_ahead_buffer_max = min(int(sys.argv[2]), 255)
   else:
     look_ahead_buffer_max = 7
 
   look_ahead_buffer = []
 
-  f_bytes = f_read.read(7)
+  f_bytes = f_read.read(look_ahead_buffer_max)
 
   look_ahead_buffer = list(f_bytes)
 
@@ -78,11 +81,15 @@ def encode(f_read, f_write):
 
     f_write.write(triple[0].to_bytes(1, byteorder='big') + triple[1].to_bytes(1, byteorder= 'big') + triple[2])
     
-    #result.append(triple)
+    hist.append(triple[0])
+    hist.append(triple[1])
 
+  #plt.hist(np.array(hist))
+  #plt.title("Histogram")
   end = time.time()
   print('Demorou: {} segundos'.format(end - start))
-  #print(result)
+  #plt.show()
+  
 
 
 def find_pattern(search_buffer, look_ahead_buffer):

@@ -3,7 +3,7 @@ import re
 import time
 
 def main():
-  header = b'FA'
+  header = b'FA' #Somente para identificar a codificação
   
   filename = input("Informe o nome (caminho) do arquivo a ser descomprimido: ")
   directory = input("Informe o nome do diretório do resultado (será o atual caso não informado): ")
@@ -49,9 +49,9 @@ def decode(f_read, f_write):
   start = time.time()
 
   if len(sys.argv) > 1:
-    search_buffer_max = sys.argv[1]
+    search_buffer_max = min(int(sys.argv[1]), 255)
   else:
-    search_buffer_max = 8
+    search_buffer_max = 16
 
   search_buffer = []
 
