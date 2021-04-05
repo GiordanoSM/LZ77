@@ -1,5 +1,6 @@
 import sys
 import re
+import time
 
 def main():
 
@@ -33,6 +34,9 @@ def add_path_bin(directory, no_path_name):
 
 def encode(f_read, f_write):
   #result = []
+
+  print('Enconding... (this may take a while)')
+  start = time.time()
 
   search_buffer = []
   search_buffer_max = 8
@@ -68,6 +72,8 @@ def encode(f_read, f_write):
     
     #result.append(triple)
 
+  end = time.time()
+  print('Demorou: {} segundos'.format(end - start))
   #print(result)
 
 

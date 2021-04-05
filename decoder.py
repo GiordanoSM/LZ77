@@ -1,5 +1,6 @@
 import sys
 import re
+import time
 
 def main():
   header = b'FA'
@@ -44,6 +45,8 @@ def add_path_rmv_bin(directory, no_path_name):
   return directory + '/' + no_bin_name if directory else no_bin_name
 
 def decode(f_read, f_write):
+  print('Decoding... (this may take a while)')
+  start = time.time()
 
   search_buffer = []
   search_buffer_max = 8
@@ -72,8 +75,11 @@ def decode(f_read, f_write):
     f_write.write(triple[2].to_bytes(1, byteorder= 'big'))
 
     triple = tuple(f_read.read(3))
+  
+  end = time.time()
+  print('Demorou: {} segundos'.format(end - start))
 
-    print(search_buffer)
+    #print(search_buffer)
 
 if __name__ == "__main__":
   main()
