@@ -4,6 +4,8 @@
 
 **Versão Python:** 3.7.1
 
+**Necessários os seguintes pacotes instalados utilizando 'pip install':** bitstring
+
 **Executado pela linha de comando**
 
 ## Execução de encoder.py

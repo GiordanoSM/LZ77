@@ -1,9 +1,10 @@
 import sys
 import re
 import time
-import numpy as np
-from matplotlib import pyplot as plt
+#import numpy as np
+#from matplotlib import pyplot as plt
 import bitstring as bs
+#from golomb_coding import golomb_coding as gc
 
 def main():
 
@@ -19,7 +20,13 @@ def main():
     with open(filename, 'rb') as f_read:
       with open(filename_result, 'wb') as f_write:
         f_write.write(header.tobytes())
+
+        print('Codificando... (pode demorar)')
+        start = time.time()
         padding = encode_and_write(f_read, f_write)
+        end = time.time()
+        print('Demorou: {} segundos'.format(end - start))
+
         f_write.seek(0)
         f_write.write((header[:4] + padding).tobytes()) #Insere a quantidade final de padding no cabeçalho
 
@@ -37,13 +44,9 @@ def add_path_bin(directory, no_path_name):
   bin_name = no_path_name + '.bin'
   return directory + '/' + bin_name if directory else bin_name
 
-def encode_and_write (f_read, f_write):
+def encode_and_write (f_read, f_write, writing=True, decoder=None):
   #hist = []
-
-  print('Enconding... (this may take a while)')
-  start = time.time()
-
-  write_buffer = bs.Bits(bin='0b')
+  padding = 0
 
   if len(sys.argv) > 1:
     search_buffer_max = min(int(sys.argv[1]),255)
@@ -59,9 +62,11 @@ def encode_and_write (f_read, f_write):
 
   f_bytes = f_read.read(look_ahead_buffer_max)
   look_ahead_buffer = list(f_bytes)
+  write_buffer = bs.Bits(bin='0b')
 
   while(f_bytes or len(look_ahead_buffer) > 0):
     triple = find_pattern(search_buffer, look_ahead_buffer)
+    
     next_s = triple[1] + 1
     f_bytes = f_read.read(next_s)
 
@@ -75,31 +80,31 @@ def encode_and_write (f_read, f_write):
 
     look_ahead_buffer = look_ahead_buffer[next_s:] + list(f_bytes)
 
-    coded_index = triple[0].to_bytes(1, byteorder='big')
-    coded_size = triple[1].to_bytes(1, byteorder= 'big')
+    if writing: 
 
-    write_buffer += coded_index + coded_size + triple[2]
+      coded_index = triple[0].to_bytes(1, byteorder= 'big')
+      coded_size = triple[1].to_bytes(1, byteorder= 'big')
 
-    if write_buffer.len % 8 == 0: #A cada múltiplo de 8 bits de código gerado, escreve no arquivo e esvazia o buffer
-      write_buffer.tofile(f_write)
-      write_buffer = bs.Bits(bin='0b')
+      write_buffer += coded_index + coded_size + bs.Bits(bytes=triple[2])
+
+      if write_buffer.len % 8 == 0: #A cada múltiplo de 8 bits de código gerado, escreve no arquivo e esvazia o buffer
+        write_buffer.tofile(f_write)
+        write_buffer = bs.Bits(bin='0b')
 
     #hist.append(triple[0])
     #hist.append(triple[1])
 
-  write_buffer.tofile(f_write) #Coloca o resto do código gerado no arquivo
-
-  #Retorna o padding utilizado na última adição ao arquivo
-  if write_buffer.len % 8 == 0:
-    padding = 0
-  else: padding = 8 - (write_buffer.len % 8)
+  if writing: 
+    write_buffer.tofile(f_write) #Coloca o resto do código gerado no arquivo
+    #Retorna o padding utilizado na última adição ao arquivo
+    if write_buffer.len % 8 == 0:
+      padding = 0
+    else: padding = 8 - (write_buffer.len % 8)
 
   #plt.hist(np.array(hist))
   #plt.title("Histogram")
-  end = time.time()
-  print('Demorou: {} segundos'.format(end - start))
   #plt.show()
-
+  print(padding)
   return padding
   
 

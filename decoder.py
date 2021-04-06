@@ -43,7 +43,7 @@ def add_path_rmv_bin(directory, no_path_name):
   return directory + '/' + no_bin_name if directory else no_bin_name
 
 def decode(file_bin, f_write, padding):
-  print('Decoding... (this may take a while)')
+  print('Decodificando... (pode demorar)')
   start = time.time()
 
   if len(sys.argv) > 1:
