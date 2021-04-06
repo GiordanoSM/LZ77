@@ -55,13 +55,12 @@ def gen_code_tree (list_symbols, lengths):
 
   return tr.make_tree_code (list_symbols, lengths) #Recria os códigos através dos tamanhos através de uma árvore
 
-def decoder_two (file_bin, index, code, tree, end):
+#------------------------------------
+
+def decoder_two (file_bin, index, inv_dict_code, tree, end):
 
   values = []
   counter = 0
-
-  #Dicionario com o codigo como chave e o símbolo como valor
-  inv_dict_code = {_code: symbol for symbol, _code in code.items()}
 
   node = tree #Colocando o nó na raiz
 

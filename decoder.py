@@ -64,37 +64,38 @@ def decode(file_bin, f_write, padding, list_symbols, lengths):
 
   end = file_bin.len - padding #Id do final do arquivo
 
-  print(end)
-
-  buffer = bs.Bits(bin= '0b')
+  #print(end)
   
   count = 0
 
-  while count < end:
-    #print(count)
-    values, count = mh.decoder_two(file_bin, count, code, tree, end)
+  #numero = 0
 
-    index = values[0]
-    size = values[1]
+  #Dicionario com o codigo como chave e o símbolo como valor
+  inv_dict_code = {_code: symbol for symbol, _code in code.items()}
+
+  while count < end:
+    values, count = mh.decoder_two(file_bin, count, inv_dict_code, tree, end)
+
+    index = int.from_bytes(values[0],byteorder='big')
+    size = int.from_bytes(values[1],byteorder='big')
 
     next_s = file_bin[count:count + 8].tobytes()
     count += 8
 
-    if index > 0 and size > 0:
+    if index > 0:
       index = len(search_buffer) - index
 
       for i in range(size):
         search_buffer.append(search_buffer[index + i])
         f_write.write(search_buffer[index + i])
-      
-      if len(search_buffer) >= search_buffer_max:
-        search_buffer = search_buffer[len(search_buffer) - search_buffer_max + 1:]
-
-    elif len(search_buffer) == search_buffer_max:
-      search_buffer.pop(0)
 
     search_buffer.append(next_s)
     f_write.write(next_s)
+    #numero += size + 1
+    #print("Next: {}, search_buffer: {}, values: {}, numero: {}, index: {}".format(next_s, search_buffer, values, numero, index))
+
+    if len(search_buffer) >= search_buffer_max:
+        search_buffer = search_buffer[len(search_buffer) - search_buffer_max:]
   
   end = time.time()
   print('Demorou: {} segundos'.format(end - start))

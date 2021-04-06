@@ -32,7 +32,7 @@ def main():
         padding = write_or_getprob(f_read, f_write, writing= True, code= code) #Escreve o artigo utilizando o LZ77 e o Huffman para as posições e tamanhos
 
         f_write.seek(0)
-        f_write.write((header[:4] + bs.Bits(uint= padding, lenght= 4)).tobytes()) #Insere a quantidade final de padding no cabeçalho
+        f_write.write((header[:4] + bs.Bits(uint= padding, length= 4)).tobytes()) #Insere a quantidade final de padding no cabeçalho
 
         end = time.time()
         print('Demorou: {} segundos'.format(end - start))
