@@ -1,9 +1,10 @@
 import sys
 import re
 import time
+import bitstring as bs
 
 def main():
-  header = b'FA' #Somente para identificar a codificação
+  header = bs.Bits(hex='0xF0') #Header sendo F + numero de bits de padding no final do arquivo
   
   filename = input("Informe o nome (caminho) do arquivo a ser descomprimido: ")
   directory = input("Informe o nome do diretório do resultado (será o atual caso não informado): ")
@@ -30,7 +31,7 @@ def main():
   except WrongHeader:
     sys.exit('Erro: Header do arquivo não condiz com o esperado.')
 
-  print("Finished!\n")
+  print("Terminado! Criado arquivo {}.\n".format(filename_result))
 
 #-----------------------------
 
