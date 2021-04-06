@@ -4,9 +4,7 @@ import time
 import bitstring as bs
 import my_huffman as mh
 
-def main():
-  header = bs.Bits(hex='0xF0') #Header sendo F + numero de bits de padding no final do arquivo
-  
+def main():  
   filename = input("Informe o nome (caminho) do arquivo a ser descomprimido: ")
   directory = input("Informe o nome do diretório do resultado (será o atual caso não informado): ")
 
@@ -22,9 +20,15 @@ def main():
       
       padding = check_header(bits_header) #Retira as informações do header
 
-      file_bin = bs.Bits(filename= filename, offset= 8) #Lê o resto do arquivo (Isso não traz para a memória o arquivo todo de uma vez)
+      _list = bs.Bits(filename= filename, offset= 8,  length= 256) #Lê os 256 bits que indicam os símbolos (Huffman)
+      list_symbols = get_symbols(_list) #Extrai quais são os símbolos (Huffman)
 
-      decode(file_bin, f_write, padding)
+      bits_lengths = bs.Bits(filename= filename, offset= 264, length= len(list_symbols)*8) #Lê os tamanhos dos códigos (Huffman)
+      lengths = get_lengths(bits_lengths) #Extrai os tamanhos dos códigos (Huffman)
+
+      file_bin = bs.Bits(filename= filename, offset= 264 + len(list_symbols)*8) #Lê o resto do arquivo (Isso não traz para a memória o arquivo todo de uma vez)
+
+      decode(file_bin, f_write, padding, list_symbols, lengths)
 
   except IOError as ioe:
     sys.exit('Erro: Arquivo ou diretório "{}" não existente.'.format(ioe.filename))
@@ -39,11 +43,13 @@ def main():
 def remove_path(filename):
   return re.split(r'\\|/', filename)[-1]
 
+#----------------------------
 def add_path_rmv_bin(directory, no_path_name):
   no_bin_name = no_path_name[:-4]
   return directory + '/' + no_bin_name if directory else no_bin_name
 
-def decode(file_bin, f_write, padding):
+#-----------------------------
+def decode(file_bin, f_write, padding, list_symbols, lengths):
   print('Decodificando... (pode demorar)')
   start = time.time()
 
@@ -54,19 +60,25 @@ def decode(file_bin, f_write, padding):
 
   search_buffer = []
 
+  code, tree = mh.gen_code_tree(list_symbols, lengths)
+
   end = file_bin.len - padding #Id do final do arquivo
+
+  print(end)
 
   buffer = bs.Bits(bin= '0b')
   
   count = 0
+
   while count < end:
+    #print(count)
+    values, count = mh.decoder_two(file_bin, count, code, tree, end)
 
-    triple = file_bin[count:count + 24]
-    count = count + 24
+    index = values[0]
+    size = values[1]
 
-    index = triple[0:8].uint
-    size = triple[8:16].uint
-    next_s = triple[16:].tobytes()
+    next_s = file_bin[count:count + 8].tobytes()
+    count += 8
 
     if index > 0 and size > 0:
       index = len(search_buffer) - index
@@ -89,6 +101,7 @@ def decode(file_bin, f_write, padding):
 
   #print(search_buffer)
 
+#----------------------------------------
 def check_header(header):
 
   if header[:-4] == bs.Bits(hex= '0xf'):
@@ -98,6 +111,27 @@ def check_header(header):
 
 class WrongHeader(Exception):
   pass
+
+#---------------------------------------------------------------------------------------------
+#Extrai os símbolos presentes
+def get_symbols(_list):
+
+  int_little = list(_list.findall('0b1')) #inteiros dos símbolos lidos na byteordem 'litte'
+
+  symbols = [(255-s).to_bytes(1, byteorder= 'big') for s in int_little] #símbolos presentes em bytes
+
+  return symbols
+
+#--------------------------------------------------------------------------------------------
+#Cria um array de inteiros com os tamanhos existentes
+def get_lengths(bits_lengths):
+
+  lengths = []
+
+  for b in bits_lengths.tobytes():
+    lengths.append(b)
+
+  return lengths
 
 if __name__ == "__main__":
   main()

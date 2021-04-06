@@ -55,7 +55,7 @@ def gen_code_tree (list_symbols, lengths):
 
   return tr.make_tree_code (list_symbols, lengths) #Recria os códigos através dos tamanhos através de uma árvore
 
-def decoder_two (file_bin, index, code, tree):
+def decoder_two (file_bin, index, code, tree, end):
 
   values = []
   counter = 0
@@ -66,7 +66,7 @@ def decoder_two (file_bin, index, code, tree):
   node = tree #Colocando o nó na raiz
 
   #Percorre os bits a partir de index e sai se já foram achados dois valores
-  while index < file_bin.len and counter < 2:
+  while index < end and counter < 2:
 
     #Percorre árvore se 0 para a esquerda e se 1 para a direita.
     if file_bin[index]:
@@ -79,6 +79,6 @@ def decoder_two (file_bin, index, code, tree):
     if not node.have_children:
       values.append(inv_dict_code[node.value])
       node = tree
-      counter = 1
+      counter += 1
 
   return values, index #Retorna os dois valores decodificados e o indice do proximo bit
