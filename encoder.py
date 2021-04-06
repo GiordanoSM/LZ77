@@ -4,7 +4,7 @@ import time
 #import numpy as np
 #from matplotlib import pyplot as plt
 import bitstring as bs
-#from golomb_coding import golomb_coding as gc
+import my_huffman as mh
 
 def main():
 
@@ -19,16 +19,23 @@ def main():
   try:
     with open(filename, 'rb') as f_read:
       with open(filename_result, 'wb') as f_write:
-        f_write.write(header.tobytes())
-
         print('Codificando... (pode demorar)')
         start = time.time()
-        padding = encode_and_write(f_read, f_write)
-        end = time.time()
-        print('Demorou: {} segundos'.format(end - start))
+        prob = write_or_getprob(f_read, f_write, writing= False)
+        code, symbols_being, lengths = mh.encoder(prob) #Gera uma codificação de huffman
+
+        f_write.write(header.tobytes()) #Escreve o header no arquivo (0xF0), poderiormente 0 será o tamanho do padding final
+        f_write.write(symbols_being.tobytes()) #Escreve a sequência de existência dos símbolos (Huffman)
+        f_write.write(lengths) #Escreve os tamanhos dos códigos na ordem lexicográfica de seus símbolos (Huffman)
+
+        f_read.seek(0)
+        padding = write_or_getprob(f_read, f_write, writing= True, code= code) #Escreve o artigo utilizando o LZ77 e o Huffman para as posições e tamanhos
 
         f_write.seek(0)
         f_write.write((header[:4] + padding).tobytes()) #Insere a quantidade final de padding no cabeçalho
+
+        end = time.time()
+        print('Demorou: {} segundos'.format(end - start))
 
   except IOError as ioe:
     sys.exit('Arquivo ou diretório "{}" não existente.'.format(ioe.filename))
@@ -44,7 +51,9 @@ def add_path_bin(directory, no_path_name):
   bin_name = no_path_name + '.bin'
   return directory + '/' + bin_name if directory else bin_name
 
-def encode_and_write (f_read, f_write, writing=True, decoder=None):
+#Recebe os arquivos para leitura e escrita, e define se vai escrever no arquivo de escrita utilizando um code (dicionário de códigos) específico ou se gerará as probabilidades dos números resultantes
+#Retorna o padding caso writing = True e um dicionário com as probabilidades caso False
+def write_or_getprob (f_read, f_write, writing=True, code=None):
   #hist = []
   padding = 0
 
@@ -64,8 +73,14 @@ def encode_and_write (f_read, f_write, writing=True, decoder=None):
   look_ahead_buffer = list(f_bytes)
   write_buffer = bs.Bits(bin='0b')
 
+  symbols = {} #Dicionario com os simbolos e probabilidades
+
+  n_triples = 0 #Contador dos numeros no arquivo
+
   while(f_bytes or len(look_ahead_buffer) > 0):
+
     triple = find_pattern(search_buffer, look_ahead_buffer)
+    n_triples += 1
     
     next_s = triple[1] + 1
     f_bytes = f_read.read(next_s)
@@ -80,16 +95,28 @@ def encode_and_write (f_read, f_write, writing=True, decoder=None):
 
     look_ahead_buffer = look_ahead_buffer[next_s:] + list(f_bytes)
 
-    if writing: 
+    if writing:
 
-      coded_index = triple[0].to_bytes(1, byteorder= 'big')
-      coded_size = triple[1].to_bytes(1, byteorder= 'big')
+      index = triple[0].to_bytes(1, byteorder= 'big')
+      size = triple[1].to_bytes(1, byteorder= 'big')
 
-      write_buffer += coded_index + coded_size + bs.Bits(bytes=triple[2])
+      if code:
+        index = code[index]
+        size = code[size]
+
+      write_buffer += index + size + bs.Bits(bytes=triple[2])
 
       if write_buffer.len % 8 == 0: #A cada múltiplo de 8 bits de código gerado, escreve no arquivo e esvazia o buffer
         write_buffer.tofile(f_write)
         write_buffer = bs.Bits(bin='0b')
+
+    else:
+      for number in triple[:-1]:
+        byte = number.to_bytes(1, byteorder= 'big')
+        if byte in symbols.keys():
+          symbols[byte] += 1
+        else: symbols[byte] = 1
+
 
     #hist.append(triple[0])
     #hist.append(triple[1])
@@ -100,12 +127,16 @@ def encode_and_write (f_read, f_write, writing=True, decoder=None):
     if write_buffer.len % 8 == 0:
       padding = 0
     else: padding = 8 - (write_buffer.len % 8)
+    
+    print(padding)
+    return padding
 
+
+  else:
+    return {key: value/(n_triples*2) for key, value in symbols.items()} #Dividindo todos os valores pelo total
   #plt.hist(np.array(hist))
   #plt.title("Histogram")
   #plt.show()
-  print(padding)
-  return padding
   
 
 

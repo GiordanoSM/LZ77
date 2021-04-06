@@ -2,6 +2,7 @@ import sys
 import re
 import time
 import bitstring as bs
+import my_huffman as mh
 
 def main():
   header = bs.Bits(hex='0xF0') #Header sendo F + numero de bits de padding no final do arquivo
