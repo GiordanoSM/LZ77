@@ -57,7 +57,7 @@ def decode(file_bin, f_write, padding, list_symbols, lengths):
   if len(sys.argv) > 1:
     search_buffer_max = min(int(sys.argv[1]), 255)
   else:
-    search_buffer_max = 16
+    search_buffer_max = 255
   search_buffer = []
 
   #Gera o código de Huffman e a árvore utilizadas na compressão

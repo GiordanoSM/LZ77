@@ -64,14 +64,14 @@ def write_or_getprob (f_read, f_write, writing=True, code=None):
   if len(sys.argv) > 1:
     search_buffer_max = min(int(sys.argv[1]),255)
   else:
-    search_buffer_max = 16
+    search_buffer_max = 255
   search_buffer = []
 
   #Seleciona o valor do comprimento máximo do Look Ahead Buffer
   if len(sys.argv) > 2:
     look_ahead_buffer_max = min(int(sys.argv[2]), 255)
   else:
-    look_ahead_buffer_max = 16
+    look_ahead_buffer_max = 255
   look_ahead_buffer = []
 
   #Preenche o Look Ahead Buffer (lista de bytes)
